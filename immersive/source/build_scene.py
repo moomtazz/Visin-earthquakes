@@ -28,6 +28,8 @@ OUT = os.path.join(HERE, "index.html")
 
 # The bounding box of the USGS query.
 LON0, LON1, LAT0, LAT1 = 95.0, 141.0, -11.0, 6.0
+# The map drawn round it is wider, so no island is cut at the query box: all of New Guinea, Borneo, Malaya.
+MAP_BOX = (92.0, 152.0, -14.0, 9.0)
 
 # Q5: what counts as "nearby" and "the next month".
 NEAR_KM = 100.0        # the same radius as panel 5 of the 2D dashboard
@@ -83,7 +85,8 @@ def short_place(place):
     return re.sub(r"^Pulau Pulau ", "", name)
 
 
-def coastline():
+def coastline(bounds=None):
+    LON0, LON1, LAT0, LAT1 = bounds or MAP_BOX
     """Natural Earth land rings, cut to the query box, as runs of [lon, lat]."""
     pad = 0.5
     runs = []
@@ -108,7 +111,8 @@ def coastline():
     return runs
 
 
-def land_polygons():
+def land_polygons(bounds=None):
+    LON0, LON1, LAT0, LAT1 = bounds or MAP_BOX
     """Natural Earth land rings clipped to the query box (Sutherland-Hodgman), as closed rings of [lon, lat]."""
     edges = [
         (lambda p: p[0] >= LON0, lambda a, b: [LON0, a[1] + (b[1] - a[1]) * (LON0 - a[0]) / (b[0] - a[0])]),
@@ -201,6 +205,7 @@ def main():
     data = {
         "n": len(df),
         "box": [LON0, LON1, LAT0, LAT1],
+        "map_box": list(MAP_BOX),
         "near_km": NEAR_KM,
         "window_days": WINDOW_DAYS,
         "class_counts": {c: int((df["cls"] == c).sum()) for c in "sid"},
